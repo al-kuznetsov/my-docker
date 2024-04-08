@@ -1,0 +1,4 @@
+ 1. Quickly run a default Tarantool database module as a Docker container
+ docker run --name mytarantool -d -p 8082:8081 -p 33301:3301 -v /home/al/Docker/MyTarantool:/var/lib/tarantool tarantool/tarantool:2.8.4
+
+ 

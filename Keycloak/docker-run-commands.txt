@@ -1,0 +1,4 @@
+Примеры файлов docker-compose для Keycloack
+https://github.com/keycloak/keycloak-containers/tree/main/docker-compose-examples
+
+docker run -p 8180:8080 -e KEYCLOAK_ADMIN=admin -e KEYCLOAK_ADMIN_PASSWORD=admin quay.io/keycloak/keycloak:20.0.1 start-dev

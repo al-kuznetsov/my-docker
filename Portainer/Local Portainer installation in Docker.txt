@@ -1,0 +1,17 @@
+Инструкция по поднятию Portainer локально в Докере
+
+1) Авторизируйтесь в нужном docker artifactory, если нужно.
+
+2) Создайте том для данных Portainer
+docker volume create portainer_data
+
+3) Выполните команду для скачивания и установки контейнера Portainer (это команда для установки Community Edition):
+docker run -d -p 8000:8000 -p 9443:9443 --name portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce:latest
+
+3) Можно использовать Web интерфейс для управления образами и контейнерами:
+https://localhost:9443
+*При первом запуске нужно создать пользователя с паролем и, возможно, произвести другие настройки
+
+Примечания:
+Важно, чтобы контейнер был запущен с правильными параметрами (флаг -v).
+Порты хоста можно указывать любые свободные.

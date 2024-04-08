@@ -1,0 +1,113 @@
+# Сборка артефакта с приложением на Tarantool Cartridge
+
+## Локальная сборка
+
+Для локальной разработки приложений с использованием Tarantool Enterprise SDK см. [Tarantool Cartridge](https://www.tarantool.io/ru/doc/latest/book/cartridge/).
+
+Tarantool Enterprise SDK можно скачать зарегистрировавшись с почты xxxxxxxxx@vtb.ru в [личный кабинет](https://www.tarantool.io/en/accounts/customer_zone/).
+
+Сборка приложений должна осуществляться при помощи консольной утилиты [Cartridge CLI](https://github.com/tarantool/cartridge-cli) - входит в комплект поставки Tarantool Enterprise SDK.
+
+Последовательность сборки приложения:
+
+1. Скачать бандл Tarantool Enterprise SDK (tarantool-enterprise-bundle-x.x.x-x-gxxxxxxxxx-rxxx.tar.gz) необходимой версии, например в ~/Downloads/
+2. Распаковать бандл Tarantool Enterprise SDK, например в ~/tarantool-enterprise: 
+```sh
+    tar -xvf ~/Downloads/tarantool-enterprise-bundle-x.x.x-x-gxxxxxxxxx-rxxx.tar.gz -C ~/
+```
+4. Перейти в корень приложения, например если приложение размещается в ~/app/ выполнить команду:
+```sh
+    cd ~/app
+```
+5. Выполнить настройку Tarantool Enterprise SDK:
+```sh
+    source ~/tarantool-enterprise/env.sh
+```
+6. Запустить сборку бандла приложения Tarantool:
+
+Если папка приложения находится под управлением системы контроля версий GIT и есть хотя бы один тег:
+```sh
+    cartridge pack tgz .
+```
+
+если папка приложения не находится под управлением системы контроля версий GIT или нет хотя бы одного тега, то версию бандла приложения можно задать в параметрах вызова 
+```sh
+    cartridge pack tgz . --version x.x.x
+```
+
+В случае, если все действия выполнены верно, в корневой папке приложения появится новый файл вида <cartridge_app_name>-x.x.x-x-gxxxxxxxx.tar.gz
+
+Размер файла должен быть >30мб.
+
+## Сборка приложения в рамках процесса CD (continuous delivery)
+
+Сборка приложения пайпланом TeamCity осуществляется аналогично локальной сборке. все действия выполняются на агенте TeamCity:
+
+1. Скачать дистрибутив Tarantool Enterprise SDK из репозитория банка (в случае отсутствия доступа к репозиторию с агента Teamcity - необходимо его запросить через Реестр Задач): 
+
+```sh
+cd ~/temp
+    wget http://<SEGMENT REPO>/other/APPSW/download.tarantool.io/enterprise/tarantool-enterprise-bundle-x.x.x-x-gxxxxxxxxx-rxxx.tar.gz
+```
+где
+
+SEGMENT | FQDN
+-|-
+nInet-SRV | lrext101lv.inet.vtb
+VTB-CORE | lrcore101lv.region.vtb.ru
+VTB-DEV | lrdev101lv.corp.dev.vtb
+VTB24_GLOBAL | lr24-101lv.vtb24.ru
+VTB-RF | lrprf101lv.vtb.com
+Reuters | lrpreu101lv.treasury.vtb
+BM_CLD | lrpbm101lv.oso.mmbank.ru
+VTB_DSO_TEST | lrpdso101lv.corp.dev.vtb
+VTB_DOS_CS | lrp-cs201lv.region.vtb.ru
+VTB_DOS_INT | lrp-int201lv.region.vtb.ru
+VTB_DOS_MON | lrp-mon201lv.corp.dev.vtb
+DBO_PROM | lrpdbo101lv.region.vtb.ru
+DBO_TEST | lrpdbot101lv.region.vtb.ru
+Inet-BE | lrpibe101lv.inet.vtb
+GROUPVTB | lrpgrp101lv.vtbgroup.vtb.com
+VTB-FBS | lrpfbs101lv.region.vtb.ru
+nInet-eFX | lrpefx101lv.inet.vtb
+VTB-RSRV | lrprsrv101lv.region.vtb.ru
+VTB-RSRV | lrprsrv101lv.region.vtb.ru
+VTB24_DMZ-CPAP | lrp24-dmz.vtb24.ru
+VTB24_KT | lrp24-kt.vtb24.ru
+VTB24_DMZ-COLO-BC | kred-inf001lv.dmz.vtb24.ru
+PROD-SRV-INF | lrep-app201lv.region.vtb.ru
+PROD-SRV-APP | lrep-prx201lv.region.vtb.ru
+
+2. Распаковать бандл Tarantool Enterprise SDK, во временную папку:
+
+```sh
+    mkdir -p ./SDK
+    tar -zxf ./tarantool-enterprise-bundle-2.7.2-0-g4d8c06890-r406.tar.gz --strip-components=1 -C ~/SDK
+    source ./SDK/env.sh
+```
+
+В результате в папке `~/temp/SDK` будет находиться распакованный Tarantool Enterprise SDK со статически собранным `tarantool` и `cartridge-cli`. Обе утилиты будут прописаны в `PATH`. Так же SDK включает в себя набор публичных
+и закрытых предварительно скомпилированных модулей.
+
+3. Склонировать репозиторий с исходным кодом приложения и перейти в папку с склонированным репозиторием:
+
+```sh
+    git clone https://bitbucket.region.vtb.ru/projects/XXX/repos/<app-cartridge>
+    cd <app-cartridge>
+```
+
+4. Запустить сборку бандла приложения Tarantool:
+
+Если папка приложения находится под управлением системы контроля версий GIT и есть хотя бы один тег:
+```sh
+    cartridge pack tgz .
+```
+
+если папка приложения не находится под управлением системы контроля версий GIT или нет хотя бы одного тега, то версию бандла приложения можно задать в параметрах вызова 
+```sh
+    cartridge pack tgz . --version x.x.x
+```
+
+В случае, если все действия выполнены верно, в корневой папке приложения появится новый файл вида <cartridge_app_name>-x.x.x-x-gxxxxxxxx.tar.gz
+
+5. Полученный в п.4 артефакт необходимо загрузить в NEXUS.

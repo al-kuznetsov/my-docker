@@ -1,0 +1,1 @@
+docker run -e TARANTOOL_DATABASE_QUERY=true -e TARANTOOL_READONLY=false -d -p 8000:80 quay.io/basis-company/tarantool-admin

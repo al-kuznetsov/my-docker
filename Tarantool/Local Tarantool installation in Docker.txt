@@ -1,0 +1,20 @@
+Инструкция по поднятию tarantool локально в Докере
+
+1) Авторизируйтесь в нашем artifactory
+docker login https://artifactory.cinimex.ru
+
+2) скачайте образ
+docker pull  artifactory.cinimex.ru/vtbmsa_docker/vtbmsa/vtb-cinimex-concentrator:0.2.15-0-2cc53f0
+Нужную версию образа можно узнать на странице Вики Синимекс https://wiki.cinimex.ru/pages/viewpage.action?pageId=100378706
+
+3) запустите
+
+docker run -p 8081:8081 -p 3301:3301 -t -i -d --name tarantool artifactory.cinimex.ru/vtbmsa_docker/vtbmsa/vtb-cinimex-concentrator:0.2.15-0-2cc53f0
+
+4) укажите в настройках своих сервисов для локальной отладки
+
+tarantool:
+  host: localhost
+  port: 3301
+  username: service_user
+  password: concentrator-cluster-password

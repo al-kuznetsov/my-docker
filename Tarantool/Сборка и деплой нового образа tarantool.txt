@@ -1,0 +1,60 @@
+Чтобы изменить спейсы Tarantool, нужно внести изменения в репозитории https://src.cinimex.ru/VTBMSA/vtbmsa-tarantool-cache
+Миграции, хранимые процедуры и т.п. содержатся в Maven-проекте java-example
+
+Порядок:
+1. Внести нужные изменения в java-example, включая миграции, хранимые процедуры, тесты.
+
+2. Внести запись в changelog
+
+3. Перейти в модульный репозиторий Git https://src.cinimex.ru/VTBMSA/tarantool-container.
+В нем обновить модуль vtb-cinimex-concentrator
+
+4. Развернуть сервер sonatype/nexus3 локально (можно и не локально, неважно).
+В nexus3 в raw-репозитории загрузить SDK tarantool-enterprise tarantool-enterprise-bundle-2.8.4-0-g47e6bd362-r486.tar.gz
+
+5. Собрать новый образ tarantool с указанием версии образа <версия>-<минорная версия>-<hash коммита>, например: 0.10.0-db25f35
+docker build --no-cache --progress=plain --build-arg TARANTOOL_URL_SDK=http://localhost:38081/repository/tarantool/tarantool-enterprise/tarantool-enterprise-sdk-nogc64-2.10.6-0-r553.linux.x86_64.tar.gz --tag artifactory.cinimex.ru/vtbmsa_docker/vtbmsa/vtb-cinimex-concentrator:0.10.0-db25f35 .
+
+6. Запустить собранный новый образ в контейнере и ПРОВЕРИТЬ работу тестами в проекте java-example, а также, можно позже, в приложении vtbmsa-lib-cache-rest.
+docker run -p 8081:8081 -p 3301:3301 -t -i -d --name tarantool-0.10.0-db25f35 artifactory.cinimex.ru/vtbmsa_docker/vtbmsa/vtb-cinimex-concentrator:0.10.0-db25f35
+
+7. Новый образ tarantool нужно развернуть на тестовом стенде (сейчас это сервер vtbmsa-05.vm.cmx.ru).
+
+7.1. Предупредить всех тестировщиков, что tarantool будет недоступен и все данные будут удалены. Также будут удалены все данные в БД Postgresql.
+После обработки возражений, остановить все сервисы, которые завязаны на tarantool в правильном порядке.
+Очистить схемы в БД в правильном порядке.
+
+7.2. С помощью удобного терминала (например, MobaXTerm) подключаемся через ssh к тестовому серверу tarantool.
+Нужно подключаться через SSH
+Креды:
+host: vtbmsa-05.vm.cmx.ru
+user: root
+
+7.3. На сервере обновляем переменные среды для ssh-сессии:
+source /sdk/tarantool-enterprise/env.sh
+Проверяем, что среда изменена:
+cartridge --version
+*должен быть вывод
+
+7.4. Выгрузить обновления из гит
+cd /apps/git/vtbmsa-tarantool-cache
+git pull
+!-Проверить, что все ОК синхронизировано с Git.
+
+7.5. Собрать и запустить на сервере в режиме демона новый образ tarantool
+cd /apps/cluster
+cartridge stop
+!!! Поправить настройки адреса хоста в файлах instances.yml и topology.lua: проставить IP сервера, на котором инстанс
+cartridge clean (!!! только если нужно удалить имеющиеся данные)
+cartridge build
+cartridge start -d
+
+7.6. Сконфигурировать реплики и накатить спейсы:
+cartridge replicasets setup --bootstrap-vshard
+curl -X POST http://localhost:8081/migrations/up
+
+7.7. Запустить снова поды сервисов и проследить, что миграции накатились
+
+8. Разместить новый образ в артифактори Синимекс и обновить информацию о версии образов в Вики https://wiki.cinimex.ru/pages/viewpage.action?pageId=100378706
+docker login https://artifactory.cinimex.ru
+docker push artifactory.cinimex.ru/vtbmsa_docker/vtbmsa/vtb-cinimex-concentrator:0.10.0-db25f35

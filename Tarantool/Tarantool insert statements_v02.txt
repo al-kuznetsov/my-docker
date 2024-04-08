@@ -1,0 +1,78 @@
+Добрый день, Кузнецов Александр Алексеевич прошу добавить в Tarantool в Space - spfs_customer_service
+три записи:
+ID    1e871f52-59cd-11ed-9b6a-0242ac120002
+CODE    "1201"
+SWIFT_BIC    "AVTLOAD3"
+IS_SUSPENSED    false
+SERVICES_CODE    1
+BEGIN_DATE    "2021-01-01"
+END_DATE    "2023-01-01"    
+MSG_MAX_SIZE 1048576
+SENDER_CODE    31001
+
+(!!!) uuid = require('uuid')
+fun = require('fun')
+rand = math.floor(math.random()*10000)
+box.space.spfs_customer_service:insert({ uuid.fromstr('1e871f52-59cd-11ed-9b6a-0242ac120002'), rand, "1201", "AVTLOAD3", false, 1, "2021-01-01", "2023-01-01", 1048576, 31001 })
+
+
+ID    1e871f52-59cd-11ed-9b6a-0242ac120003
+CODE    "1202"
+SWIFT_BIC    "AVDT0007"
+IS_SUSPENSED    false
+SERVICES_CODE    1
+BEGIN_DATE    "2021-01-01"
+END_DATE    "2023-01-01"    
+MSG_MAX_SIZE 1048576
+SENDER_CODE    31002
+
+rand = math.floor(math.random()*10000)
+box.space.spfs_customer_service:insert({ uuid.fromstr('1e871f52-59cd-11ed-9b6a-0242ac120003'), rand, "1202", "AVDT0007", false, 1, "2021-01-01", "2023-01-01", 1048576, 31002 })
+
+
+ID    1e871f52-59cd-11ed-9b6a-0242ac120004
+CODE    "1"
+SWIFT_BIC    "AVTLOAD4"
+IS_SUSPENSED    false
+SERVICES_CODE    21003
+BEGIN_DATE    "2021-01-01"
+END_DATE    "2023-01-01"    
+MSG_MAX_SIZE 1048576
+SENDER_CODE    31003
+
+rand = math.floor(math.random()*10000)
+box.space.spfs_customer_service:insert({ uuid.fromstr('1e871f52-59cd-11ed-9b6a-0242ac120004'), rand, "1", "AVTLOAD4", false, 21003, "2021-01-01", "2023-01-01", 1048576, 31003 })
+
+ID    1e871f52-59cd-11ed-9b6a-0242ac120008
+CODE    "1"
+SWIFT_BIC    "AVTLOAD8"
+IS_SUSPENSED    false
+SERVICES_CODE    1
+BEGIN_DATE    "2021-01-01"
+END_DATE    "2023-01-01"    
+MSG_MAX_SIZE 1048576
+SENDER_CODE    31004
+
+rand = math.floor(math.random()*10000)
+box.space.spfs_customer_service:insert({ uuid.fromstr('1e871f52-59cd-11ed-9b6a-0242ac120008'), rand, "1204", "AVTLOAD8", false, 1, "2021-01-01", "2023-01-01", 1048576, 31004 })
+
+
+***
+ed_correlation
+
+rand = math.floor(math.random()*10000)
+
+box.space.ed_correlation:insert({ 38651094672188, rand, "ED501", "4525187000", "2023-08-08", 800000088, "3600" })
+box.space.ed_correlation:insert({ 38651094672189, rand, "ED501", "4525187000", "2023-08-08", 800000089, "3600" })
+
+box.space.ed_correlation:insert({ 52430712712192, rand, "ED503", "4525187000", "2023-08-01", 968035047, "3600" })
+
+***
+ed_spfs_req_type
+
+rand = math.floor(math.random()*10000)
+
+box.space.ed_spfs_req_type:insert({ 52430711112192, rand, 1, "3600" })
+box.space.ed_spfs_req_type:insert({ 52430711122192, rand, 2, "3600" })
+
+box.space.ed_spfs_req_type:insert({ 52430711422192, rand, 1, "3600" })
