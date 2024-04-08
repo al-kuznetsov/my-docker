@@ -1,0 +1,23 @@
+// Server config - used to authorise
+KafkaServer{
+  org.apache.kafka.common.security.plain.PlainLoginModule required
+  username="kafka"
+  password="pass123"
+  user_kafka="pass123"
+  user_admin="admin-secret"
+  user_ivan="ivan-secret"
+  user_nana="nana-secret";
+};
+// Client config used to connect to Kafka
+KafkaClient {
+  org.apache.kafka.common.security.plain.PlainLoginModule required
+  username="kafka"
+  password="pass123";
+};
+
+// Client config user to connect to Zookeeper
+Client {
+  org.apache.zookeeper.server.auth.DigestLoginModule required
+  username="kafka"
+  password="pass123";
+};

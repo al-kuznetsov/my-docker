@@ -43,7 +43,7 @@ services:
          KAFKA_ADVERTISED_LISTENERS_PORT: 19092
          KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT
          KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
-         KAFKA_AUTO_CREATE_TOPICS_ENABLE: true
+         KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
       volumes:
       - ./dockerfiles/kafka/server.properties:/opt/server.properties:Z
       - ./dockerfiles/kafka/kafka-server-start.sh:/opt/kafka-2.8.2-src/bin/kafka-server-start.sh:Z
@@ -68,7 +68,7 @@ services:
          KAFKA_ADVERTISED_LISTENERS_PORT: 29092
          KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT
          KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
-         KAFKA_AUTO_CREATE_TOPICS_ENABLE: true
+         KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
       volumes:
       - ./dockerfiles/kafka/server.properties:/opt/server.properties:Z
       - ./dockerfiles/kafka/kafka-server-start.sh:/opt/kafka-2.8.2-src/bin/kafka-server-start.sh:Z
@@ -93,7 +93,7 @@ services:
          KAFKA_ADVERTISED_LISTENERS_PORT: 39092
          KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT
          KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
-         KAFKA_AUTO_CREATE_TOPICS_ENABLE: true
+         KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
       volumes:
       - ./dockerfiles/kafka/server.properties:/opt/server.properties:Z
       - ./dockerfiles/kafka/kafka-server-start.sh:/opt/kafka-2.8.2-src/bin/kafka-server-start.sh:Z

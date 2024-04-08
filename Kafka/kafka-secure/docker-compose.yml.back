@@ -1,0 +1,31 @@
+version: '2'
+
+services:
+  zookeeper-secure:
+    image: 'bitnami/zookeeper:3.8'
+    container_name: zookeeper-secure
+    ports:
+     - '2481:2181'
+    environment:
+      - ZOO_ENABLE_AUTH=yes
+      - ZOO_SERVER_USERS=zadmin
+      - ZOO_SERVER_PASSWORDS=admin-secret
+  kafka-secure:
+    image: 'bitnami/kafka:3.4'
+    hostname: kafka-secure.vm.cmx.ru
+    container_name: kafka-secure
+    ports:
+      - '29099'
+    environment:
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper-secure:2481
+      - KAFKA_CFG_LISTENERS=SASL_SSL://:29099
+      - KAFKA_CFG_ADVERTISED_LISTENERS=SASL_SSL://:29099
+      - KAFKA_ZOOKEEPER_USER=zadmin
+      - KAFKA_ZOOKEEPER_PASSWORD=admin-secret
+      - KAFKA_CLIENT_USERS=kadmin
+      - KAFKA_CLIENT_PASSWORDS=admin-secret
+      - KAFKA_CERTIFICATE_PASSWORD=confluent
+      - KAFKA_TLS_TYPE=JKS 
+    volumes:
+      - './secrets/keystore/kafka.keystore.jks:/opt/bitnami/kafka/config/certs/kafka.keystore.jks:ro'
+      - './secrets/truststore/kafka.truststore.jks:/opt/bitnami/kafka/config/certs/kafka.truststore.jks:ro'

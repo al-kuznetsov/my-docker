@@ -1,0 +1,79 @@
+version: '3.6'
+
+volumes:
+  zookeeper-data:
+    driver: local
+  zookeeper-log:
+    driver: local
+  kafka-data:
+    driver: local
+
+services:
+  akhq:
+    # build:
+    #   context: .
+    image: tchiotludo/akhq
+    environment:
+      AKHQ_CONFIGURATION: |
+        akhq:
+          connections:
+            docker-kafka-server:
+              properties:
+                bootstrap.servers: "kafka:9092"
+                # security.protocol: SASL_PLAINTEXT
+                # sasl.mechanism: PLAIN
+                # sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="kafka" password="pass123";
+
+    ports:
+      - '8089:8080'
+    links:
+      - kafka
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    ports:
+      - '2181:2181'
+    volumes:
+      - zookeeper-data:/var/lib/zookeeper/data:Z
+      - zookeeper-log:/var/lib/zookeeper/log:Z
+    environment:
+      ZOOKEEPER_CLIENT_PORT: '2181'
+      ZOOKEPER_TICK_TIME: 2000
+      ZOOKEEPER_ADMIN_ENABLE_SERVER: 'false'
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    ports:
+      - '9092:9092'
+      - '9093:9093'
+    volumes:
+      - kafka-data:/var/lib/kafka/data:Z
+      - ./configs:/etc/kafka/configs
+    environment:
+      KAFKA_BROKER_ID: '1'
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      ZOOKEEPER_SASL_ENABLED: 'false'
+      KAFKA_NUM_PARTITIONS: '12'
+      KAFKA_COMPRESSION_TYPE: 'gzip'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: '1'
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: '1'
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: '1'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:9092,SASL_PLAINTEXT://localhost:9093'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'PLAINTEXT:PLAINTEXT,SASL_PLAINTEXT:SASL_PLAINTEXT'
+      # KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_SECURITY_INTER_BROKER_PROTOCOL: 'SASL_PLAINTEXT'
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: 'PLAIN'
+      KAFKA_SASL_ENABLED_MECHANISMS: 'PLAIN'
+      KAFKA_OPTS: '-Djava.security.auth.login.config=/etc/kafka/configs/kafka_server_jaas.conf'
+      KAFKA_SUPER_USERS: "User:kafka;User:admin"
+      # KAFKA_LISTENER_NAME_SASL_PLAINTEXT_SASL_ENABLED_MECHANISMS: PLAIN
+      # KAFKA_LISTENER_NAME_SASL_PLAINTEXT_PLAIN_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required user_admin='admin-secret' user_ivan='ivan-secret' user_nana='nana-secret';"
+      KAFKA_CONFLUENT_SUPPORT_METRICS_ENABLE: 'false'
+      KAFKA_JMX_PORT: '9091'
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'false'
+      KAFKA_AUTHORIZER_CLASS_NAME: 'kafka.security.authorizer.AclAuthorizer'
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: 'true'
+    links:
+      - zookeeper

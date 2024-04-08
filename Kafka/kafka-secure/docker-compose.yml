@@ -1,0 +1,66 @@
+---
+version: '2'
+services:
+  zookeeper-secure:
+    image: confluentinc/cp-zookeeper:7.3.1
+    container_name: zookeeper-secure
+    hostname: zookeeper-secure.vm.cmx.ru
+    ports:
+     - '2481:2181'
+    environment:
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_CLIENT_PORT: 2481
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_SERVERS: zookeeper-secure.vm.cmx.ru:22888:23888
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/zoo_jaas.conf
+        -Dzookeeper.authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider
+    volumes:
+      - ./secrets:/etc/kafka/secrets
+
+  kafka-secure:
+    image: confluentinc/cp-server:7.3.1
+    hostname: kafka-secure.vm.cmx.ru
+    container_name: kafka-secure
+    ports:
+     - '29099:29099'
+    depends_on:
+      - zookeeper-secure
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-secure.vm.cmx.ru:2481
+      KAFKA_ADVERTISED_LISTENERS: SASL_SSL://:29099
+      KAFKA_LISTENERS: SASL_SSL://:29099
+      KAFKA_SSL_KEYSTORE_FILENAME: test.kafka.keystore.jks
+      KAFKA_SSL_KEYSTORE_CREDENTIALS: kafka
+      KAFKA_SSL_KEY_CREDENTIALS: kafka
+      KAFKA_SSL_TRUSTSTORE_FILENAME: test.kafka.truststore.jks
+      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: kafka
+      KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: " "
+      KAFKA_SSL_CLIENT_AUTH: requested
+      KAFKA_SECURITY_INTER_BROKER_PROTOCOL: SASL_SSL
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+      KAFKA_SASL_ENABLED_MECHANISMS: PLAIN
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/kafka_jaas.conf
+      KAFKA_SUPER_USERS: User:admin
+      KAFKA_NUM_PARTITIONS: 1
+#      ALLOW_PLAINTEXT_LISTENER: 'yes'
+#      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+#      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-main:9092,PLAINTEXT_HOST://kafka-main:29092
+#      KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+#      KAFKA_JMX_PORT: 9101
+#      KAFKA_JMX_HOSTNAME: kafka-main
+#      KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: http://schema-registry-main:18081
+#      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: kafka-main:9092
+      CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
+      CONFLUENT_METRICS_ENABLE: 'false'
+      CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
+    volumes:
+      - ./secrets:/etc/kafka/secrets

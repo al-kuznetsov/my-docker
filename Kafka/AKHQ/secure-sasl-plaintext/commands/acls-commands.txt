@@ -1,0 +1,6 @@
+kafka-acls --bootstrap-server localhost:9092 --topic wrong_topic --add --allow-principal User:ivan --operation All
+kafka-acls --bootstrap-server localhost:9092 --topic demo_input --add --allow-principal User:ivan --operation All
+kafka-acls --bootstrap-server localhost:9092 --topic demo_output --add --allow-principal User:ivan --operation All
+
+kafka-acls --bootstrap-server localhost:9092 --topic demo_input --add --allow-principal User:nana --operation All
+kafka-acls --bootstrap-server localhost:9092 --topic demo_output --add --allow-principal User:nana --operation All
