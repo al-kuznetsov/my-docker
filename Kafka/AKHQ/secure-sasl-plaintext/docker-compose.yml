@@ -19,10 +19,10 @@ services:
           connections:
             docker-kafka-server:
               properties:
-                bootstrap.servers: "kafka:9092"
-                # security.protocol: SASL_PLAINTEXT
-                # sasl.mechanism: PLAIN
-                # sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="kafka" password="pass123";
+                bootstrap.servers: "kafka:9094"
+                security.protocol: SASL_PLAINTEXT
+                sasl.mechanism: PLAIN
+                sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="admin" password="admin-secret";
 
     ports:
       - '8089:8080'
@@ -48,6 +48,7 @@ services:
     ports:
       - '9092:9092'
       - '9093:9093'
+      - '9094:9094'
     volumes:
       - kafka-data:/var/lib/kafka/data:Z
       - ./configs:/etc/kafka/configs
@@ -60,8 +61,8 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: '1'
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: '1'
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: '1'
-      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:9092,SASL_PLAINTEXT://localhost:9093'
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'PLAINTEXT:PLAINTEXT,SASL_PLAINTEXT:SASL_PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:9092,INTERNAL_PLAINTEXT://kafka:9094,SASL_PLAINTEXT://localhost:9093'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'PLAINTEXT:PLAINTEXT,INTERNAL_PLAINTEXT:SASL_PLAINTEXT,SASL_PLAINTEXT:SASL_PLAINTEXT'
       # KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
       KAFKA_SECURITY_INTER_BROKER_PROTOCOL: 'SASL_PLAINTEXT'
       KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: 'PLAIN'
