@@ -1,0 +1,151 @@
+version: '2'
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    hostname: zookeeper
+    container_name: zookeeper-correlator
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  broker:
+    image: confluentinc/cp-kafka:5.5.0
+    hostname: broker
+    container_name: broker-correlator
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "9997:9997"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_JMX_PORT: 9997
+      KAFKA_JMX_OPTS: -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=kafka0 -Dcom.sun.management.jmxremote.rmi.port=9997
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENERS: 'PLAINTEXT://broker:29092,CONTROLLER://broker:29093,PLAINTEXT_HOST://0.0.0.0:9092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LOG_DIRS: '/tmp/logs'
+  broker-2:
+    image: confluentinc/cp-kafka:5.5.0
+    hostname: broker-2
+    container_name: broker-correlator-2
+    depends_on:
+      - zookeeper
+    ports:
+      - "39092:39092"
+      - "39997:39997"
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker-2:19092,PLAINTEXT_HOST://localhost:39092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_JMX_PORT: 9997
+      KAFKA_JMX_OPTS: -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=kafka0 -Dcom.sun.management.jmxremote.rmi.port=9997
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENERS: 'PLAINTEXT://broker-2:19092,CONTROLLER://broker-2:19093,PLAINTEXT_HOST://0.0.0.0:39092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LOG_DIRS: '/tmp/logs'
+  broker-3:
+    image: confluentinc/cp-kafka:5.5.0
+    hostname: broker-3
+    container_name: broker-correlator-3
+    depends_on:
+      - zookeeper
+    ports:
+      - "49092:49092"
+      - "49997:49997"
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker-3:59092,PLAINTEXT_HOST://localhost:49092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_JMX_PORT: 9997
+      KAFKA_JMX_OPTS: -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=kafka0 -Dcom.sun.management.jmxremote.rmi.port=9997
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENERS: 'PLAINTEXT://broker-3:59092,CONTROLLER://broker-3:59093,PLAINTEXT_HOST://0.0.0.0:49092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LOG_DIRS: '/tmp/logs'
+
+  kafka-ui:
+    container_name: kafka-ui
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - 8090:8080
+    depends_on:
+      - broker
+      - broker-2
+      - broker-3
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: broker:29092,broker-2:19092,broker-3:59092
+      KAFKA_CLUSTERS_0_METRICS_PORT: 9997
+
+  correlator-pod-01:
+    image: correlator-image-08-key-and-table
+    container_name: correlator-pod-01
+    depends_on:
+      - broker
+      - broker-2
+      - broker-3
+    ports:
+      - 8080:8080
+    environment:
+      spring_kafka_bootstrap-servers: broker:29092,broker-2:19092,broker-3:59092
+
+  correlator-pod-02:
+    image: correlator-image-08-key-and-table
+    container_name: correlator-pod-02
+    depends_on:
+      - broker
+      - broker-2
+      - broker-3
+    ports:
+      - 8081:8080
+    environment:
+      spring_kafka_bootstrap-servers: broker:29092,broker-2:19092,broker-3:59092
+
+  correlator-pod-03:
+    image: correlator-image-08-key-and-table
+    container_name: correlator-pod-03
+    depends_on:
+      - broker
+      - broker-2
+      - broker-3
+    ports:
+      - 8082:8080
+    environment:
+      spring_kafka_bootstrap-servers: broker:29092,broker-2:19092,broker-3:59092
+
+  correlator-pod-04:
+    image: correlator-image-08-key-and-table
+    container_name: correlator-pod-04
+    depends_on:
+      - broker
+      - broker-2
+      - broker-3
+    ports:
+      - 8083:8080
+    environment:
+      spring_kafka_bootstrap-servers: broker:29092,broker-2:19092,broker-3:59092
+#      spring_kafka_consumer_auto-offset-reset: latest
+#      spring_kafka_properties_transaction_state_log_replication_factor: 1
