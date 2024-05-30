@@ -1,0 +1,203 @@
+version: '3.8'
+services:
+   activemq:
+      image: apache/activemq-artemis:latest
+      hostname: activemq
+      container_name: activemq-atr
+      environment:
+         user: artemis
+         password: artemis
+      ports:
+         - 61616:61616
+         - 8161:8161
+         - 5672:5672
+      networks:
+      - atr-net
+   zookeeper:
+      image: confluentinc/cp-zookeeper
+      hostname: zookeeper
+      container_name: zookeeper-atr
+      ports:
+      - 2181:2181
+      environment:
+         ZOOKEEPER_CLIENT_PORT: 2181
+         ZOOKEEPER_TICK_TIME: 2000
+      networks:
+      - atr-net
+   kafka1:
+      image: vtbmsa-kafka:latest
+      container_name: kafka1-atr
+      build:
+         dockerfile: Dockerfile
+         context: dockerfiles/kafka/
+      hostname: kafka1
+      depends_on:
+      - zookeeper
+      ports:
+      - 19092:19092
+      environment:
+         KAFKA_BROKER_ID: 1
+         KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+         KAFKA_LISTENER: LISTENER_DOCKER_INTERNAL://kafka1:19092
+         KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://host.containers.internal:19092
+         KAFKA_ADVERTISED_LISTENERS_PORT: 19092
+         KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT
+         KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
+         KAFKA_AUTO_CREATE_TOPICS_ENABLE: true
+      volumes:
+      - ./dockerfiles/kafka/server.properties:/opt/server.properties:Z
+      - ./dockerfiles/kafka/kafka-server-start.sh:/opt/kafka-2.8.2-src/bin/kafka-server-start.sh:Z
+      networks:
+      - atr-net
+   kafka2:
+      image: vtbmsa-kafka:latest
+      container_name: kafka2-atr
+      build:
+         dockerfile: Dockerfile
+         context: dockerfiles/kafka/
+      hostname: kafka2
+      depends_on:
+      - zookeeper
+      ports:
+      - 29092:29092
+      environment:
+         KAFKA_BROKER_ID: 2
+         KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+         KAFKA_LISTENER: LISTENER_DOCKER_INTERNAL://kafka2:29092
+         KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://host.containers.internal:29092
+         KAFKA_ADVERTISED_LISTENERS_PORT: 29092
+         KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT
+         KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
+         KAFKA_AUTO_CREATE_TOPICS_ENABLE: true
+      volumes:
+      - ./dockerfiles/kafka/server.properties:/opt/server.properties:Z
+      - ./dockerfiles/kafka/kafka-server-start.sh:/opt/kafka-2.8.2-src/bin/kafka-server-start.sh:Z
+      networks:
+      - atr-net
+   kafka3:
+      image: vtbmsa-kafka:latest
+      container_name: kafka3-atr
+      build:
+         dockerfile: Dockerfile
+         context: dockerfiles/kafka/
+      hostname: kafka3
+      depends_on:
+      - zookeeper
+      ports:
+      - 39092:39092
+      environment:
+         KAFKA_BROKER_ID: 3
+         KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+         KAFKA_LISTENER: LISTENER_DOCKER_INTERNAL://kafka3:39092
+         KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://host.containers.internal:39092
+         KAFKA_ADVERTISED_LISTENERS_PORT: 39092
+         KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT
+         KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
+         KAFKA_AUTO_CREATE_TOPICS_ENABLE: true
+      volumes:
+      - ./dockerfiles/kafka/server.properties:/opt/server.properties:Z
+      - ./dockerfiles/kafka/kafka-server-start.sh:/opt/kafka-2.8.2-src/bin/kafka-server-start.sh:Z
+      networks:
+      - atr-net
+   kafdrop:
+      image: obsidiandynamics/kafdrop:latest
+      container_name: kafdrop-atr
+      ports:
+      - 19000:9000
+      environment:
+         KAFKA_BROKERCONNECT: kafka1:19092 kafka2:29092 kafka3:39092
+         JVM_OPTS: -Xms16M -Xmx48M -Xss180K -XX:-TieredCompilation -XX:+UseStringDeduplication -noverify
+      depends_on:
+      - kafka1
+      - kafka2
+      - kafka3
+      networks:
+      - atr-net
+   akhq:
+       # build:
+       #   context: .
+       image: tchiotludo/akhq
+       container_name: akhq-atr
+       environment:
+         AKHQ_CONFIGURATION: |
+           akhq:
+             connections:
+               docker-kafka-server:
+                 properties:
+                   bootstrap.servers: "kafka1:19092"
+                 connect:
+                   - name: "connect"
+                     url: "http://connect:8083"
+   
+       ports:
+         - 8080:8080
+       networks:
+         - atr-net       
+   rp-console:
+       hostname: rp-console
+       container_name: console-atr
+       image: docker.redpanda.com/redpandadata/console:latest
+       restart: on-failure
+       entrypoint: /bin/sh
+       command: -c "echo \"$$CONSOLE_CONFIG_FILE\" > /tmp/config.yml; /app/console"
+       environment:
+         CONFIG_FILEPATH: /tmp/config.yml
+         CONSOLE_CONFIG_FILE: |
+           server:
+             listenPort: 9080
+           kafka:
+             brokers: ["kafka1:19092"]
+             schemaRegistry:
+               enabled: false
+               urls: ["http://schema-registry:8081"]
+           connect:
+             enabled: false
+       ports:
+         - "9081:9080"
+       networks:
+         - atr-net
+   postgresql:
+       image: postgres:14
+       hostname: postgresql
+       container_name: postgresql-atr
+       volumes:
+         - pg_data:/var/lib/postgresql/data
+       environment:
+         POSTGRES_DB: "conduktor-console"
+         POSTGRES_USER: "conduktor"
+         POSTGRES_PASSWORD: "change_me"
+         POSTGRES_HOST_AUTH_METHOD: "scram-sha-256"
+       networks:
+         - atr-net
+   conduktor-console:
+       image: conduktor/conduktor-console:1.21.1
+       container_name: conduktor-console-atr
+       depends_on:
+         - postgresql
+       ports:
+         - "8081:8080"
+       volumes:
+         - conduktor_data:/var/conduktor
+       environment:
+         CDK_DATABASE_URL: "postgresql://conduktor:change_me@postgresql:5432/conduktor-console"
+         CDK_MONITORING_CORTEX-URL: http://conduktor-monitoring:9009/
+         CDK_MONITORING_ALERT-MANAGER-URL: http://conduktor-monitoring:9010/
+         CDK_MONITORING_CALLBACK-URL: http://conduktor-platform:8080/monitoring/api/
+         CDK_MONITORING_NOTIFICATIONS-CALLBACK-URL: http://localhost:8080
+       networks:
+         - atr-net       
+   conduktor-monitoring:
+       image: conduktor/conduktor-console-cortex:1.21.1
+       container_name: conduktor-monitoring-atr
+       environment:
+         CDK_CONSOLE-URL: "http://conduktor-console:8080"
+       ports:
+         - "8082:8080"
+       networks:
+         - atr-net 
+volumes:
+  pg_data: {}
+  conduktor_data: {}                  
+networks:
+   atr-net:
+      driver: bridge
